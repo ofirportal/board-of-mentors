@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
             generationConfig: {
               thinkingConfig: { thinkingBudget: 0 },
               maxOutputTokens: 1024,
-            },
+            } as never,
           });
 
           for await (const chunk of result.stream) {
