@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { MENTORS, buildSystemPrompt } from "@/lib/mentors";
-import { loadMemory, addConversation, updateSummary, getRecentMessages, Message } from "@/lib/memory";
+import { loadMemory, addConversation, updateSummary, Message } from "@/lib/memory";
 
 export const maxDuration = 60;
 
@@ -23,7 +23,10 @@ export async function POST(req: NextRequest) {
     const memory = await loadMemory(mentorId);
     const systemPrompt = buildSystemPrompt(mentor, memory.summary || undefined);
 
-    const recentHistory = await getRecentMessages(mentorId, 10);
+    // Extract recent history from already-loaded memory (no second DB call)
+    const recentHistory = memory.conversations.length > 0
+      ? memory.conversations.slice(-3).flatMap(c => c.messages).slice(-10)
+      : [];
     const allMessages = [...recentHistory, ...sessionMessages];
 
     const deduped = allMessages.filter((msg: Message, i: number) => {
