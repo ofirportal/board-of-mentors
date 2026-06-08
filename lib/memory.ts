@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 
 export interface Message {
   role: "user" | "assistant";
@@ -18,7 +18,7 @@ export interface MentorMemory {
 }
 
 export async function loadMemory(mentorId: string): Promise<MentorMemory> {
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from("mentor_memory")
     .select("*")
     .eq("mentor_id", mentorId)
@@ -37,7 +37,7 @@ export async function loadMemory(mentorId: string): Promise<MentorMemory> {
 }
 
 export async function saveMemory(memory: MentorMemory): Promise<void> {
-  await supabase.from("mentor_memory").upsert({
+  await getSupabase().from("mentor_memory").upsert({
     mentor_id: memory.mentorId,
     conversations: memory.conversations,
     summary: memory.summary,
