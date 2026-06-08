@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       systemInstruction: systemPrompt,
+      generationConfig: { maxOutputTokens: 800 },
     });
 
     const encoder = new TextEncoder();
@@ -54,10 +55,6 @@ export async function POST(req: NextRequest) {
         try {
           const result = await model.generateContentStream({
             contents: geminiMessages,
-            generationConfig: {
-              thinkingConfig: { thinkingBudget: 0 },
-              maxOutputTokens: 1024,
-            } as never,
           });
 
           for await (const chunk of result.stream) {
