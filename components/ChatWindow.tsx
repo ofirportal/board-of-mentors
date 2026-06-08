@@ -17,7 +17,6 @@ export default function ChatWindow({ mentor }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Welcome message on mount
   const allMessages: Message[] = [
     { role: "assistant", content: mentor.welcomeMessage },
     ...sessionMessages,
@@ -94,7 +93,7 @@ export default function ChatWindow({ mentor }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ background: "#f5f2ec" }}>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5">
         {allMessages.map((msg, i) => (
@@ -122,8 +121,8 @@ export default function ChatWindow({ mentor }: Props) {
             <div
               className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
               style={{
-                background: `${mentor.accentColor}20`,
-                border: `1px solid ${mentor.accentColor}40`,
+                background: `${mentor.accentColor}18`,
+                border: `1.5px solid ${mentor.accentColor}40`,
                 color: mentor.accentColor,
               }}
             >
@@ -131,7 +130,7 @@ export default function ChatWindow({ mentor }: Props) {
             </div>
             <div
               className="px-4 py-3 rounded-2xl rounded-tl-sm"
-              style={{ background: `${mentor.accentColor}12`, border: `1px solid ${mentor.accentColor}20` }}
+              style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.07)" }}
             >
               <div className="flex gap-1.5 items-center h-5">
                 {[0, 1, 2].map((i) => (
@@ -173,11 +172,11 @@ export default function ChatWindow({ mentor }: Props) {
       {/* Input */}
       <div
         className="px-4 py-3 border-t"
-        style={{ borderColor: "rgba(255,255,255,0.06)" }}
+        style={{ borderColor: "rgba(0,0,0,0.07)", background: "#ffffff" }}
       >
         <div
           className="flex gap-3 items-end rounded-xl px-4 py-3"
-          style={{ background: "#1a1a1f", border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ background: "#f5f2ec", border: "1px solid rgba(0,0,0,0.09)" }}
         >
           <textarea
             ref={textareaRef}
@@ -187,23 +186,27 @@ export default function ChatWindow({ mentor }: Props) {
             placeholder={`Preguntale a ${mentor.name.split(" ")[0]}...`}
             disabled={isLoading}
             rows={1}
-            className="flex-1 bg-transparent text-white/85 text-sm placeholder-white/25 resize-none outline-none leading-relaxed"
-            style={{ minHeight: "24px", maxHeight: "160px" }}
+            className="flex-1 bg-transparent text-sm resize-none outline-none leading-relaxed"
+            style={{
+              minHeight: "24px",
+              maxHeight: "160px",
+              color: "#1a1a1a",
+            }}
           />
           <button
             onClick={() => handleSend()}
             disabled={isLoading || !input.trim()}
             className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
-            style={{
-              background: mentor.accentColor,
-            }}
+            style={{ background: mentor.accentColor }}
           >
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </button>
         </div>
-        <p className="text-center text-white/15 text-xs mt-2">Enter para enviar · Shift+Enter para nueva línea</p>
+        <p className="text-center text-xs mt-2" style={{ color: "#c0bdb5" }}>
+          Enter para enviar · Shift+Enter para nueva línea
+        </p>
       </div>
     </div>
   );

@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Tu board privado de mentores extraordinarios",
     start_url: "/",
     display: "standalone",
-    background_color: "#0a0a0c",
-    theme_color: "#0a0a0c",
+    background_color: "#f5f2ec",
+    theme_color: "#f5f2ec",
     orientation: "portrait",
     icons: [
       {

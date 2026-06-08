@@ -5,19 +5,19 @@ export default function Home() {
   return (
     <main
       className="min-h-screen"
-      style={{ background: "#0a0a0c" }}
+      style={{ background: "#f5f2ec" }}
     >
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-12 text-center">
-          <p className="text-xs tracking-[0.3em] text-white/30 uppercase mb-3">OFIR Multi Family Office</p>
+          <p className="text-xs tracking-[0.3em] text-black/30 uppercase mb-3">OFIR Multi Family Office</p>
           <h1
-            className="text-4xl md:text-5xl text-white font-light mb-3"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            className="text-4xl md:text-5xl font-light mb-3"
+            style={{ fontFamily: "'Cormorant Garamond', serif", color: "#1a1a1a" }}
           >
             Board of Mentors
           </h1>
-          <p className="text-white/35 text-sm max-w-md mx-auto leading-relaxed">
+          <p className="text-sm max-w-md mx-auto leading-relaxed" style={{ color: "#6b6860" }}>
             Doce mentes extraordinarias. Conocimiento real. Disponibles cuando los necesitás.
           </p>
         </div>
@@ -30,7 +30,7 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 text-center text-white/15 text-xs">
+        <div className="mt-12 text-center text-xs" style={{ color: "#b0aca4" }}>
           Las respuestas no son asesoramiento. Son perspectivas para pensar mejor.
         </div>
       </div>

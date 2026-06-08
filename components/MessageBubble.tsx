@@ -19,8 +19,8 @@ export default function MessageBubble({ message, accentColor, mentorInitials, is
         <div
           className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
           style={{
-            background: `${accentColor}20`,
-            border: `1px solid ${accentColor}40`,
+            background: `${accentColor}18`,
+            border: `1.5px solid ${accentColor}40`,
             color: accentColor,
           }}
         >
@@ -31,14 +31,12 @@ export default function MessageBubble({ message, accentColor, mentorInitials, is
       {/* Bubble */}
       <div
         className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-          isUser
-            ? "rounded-tr-sm text-white/90"
-            : "rounded-tl-sm text-white/85"
+          isUser ? "rounded-tr-sm" : "rounded-tl-sm"
         }`}
         style={
           isUser
-            ? { background: "#ffffff12", border: "1px solid #ffffff10" }
-            : { background: `${accentColor}12`, border: `1px solid ${accentColor}20` }
+            ? { background: accentColor, color: "#ffffff" }
+            : { background: "#ffffff", border: "1px solid rgba(0,0,0,0.07)", color: "#1a1a1a" }
         }
       >
         <p className="whitespace-pre-wrap">{message.content}</p>

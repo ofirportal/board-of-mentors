@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0c;
-  --foreground: #e8e8e8;
+  --background: #f5f2ec;
+  --foreground: #1a1a1a;
 }
 
 @theme inline {
@@ -18,7 +18,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  scrollbar-color: rgba(0,0,0,0.12) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -30,6 +30,6 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.12);
   border-radius: 2px;
 }
