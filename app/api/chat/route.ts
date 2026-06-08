@@ -51,6 +51,10 @@ export async function POST(req: NextRequest) {
         try {
           const result = await model.generateContentStream({
             contents: geminiMessages,
+            generationConfig: {
+              thinkingConfig: { thinkingBudget: 0 },
+              maxOutputTokens: 1024,
+            },
           });
 
           for await (const chunk of result.stream) {
