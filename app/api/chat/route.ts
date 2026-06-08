@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+
+export const maxDuration = 60;
 import { MENTORS, buildSystemPrompt } from "@/lib/mentors";
 import { loadMemory, addConversation, updateSummary, getRecentMessages } from "@/lib/memory";
 import { searchChunks, buildRagContext, hasRag } from "@/lib/rag/index";
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
 
       try {
         const anthropicStream = await client.messages.stream({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 1024,
           system: systemPrompt,
           messages: deduped,
@@ -100,7 +102,7 @@ async function generateSummary(mentorId: string, mentorName: string) {
 
   try {
     const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 512,
       messages: [
         {
