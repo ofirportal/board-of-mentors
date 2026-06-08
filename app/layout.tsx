@@ -17,6 +17,12 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "Board of Mentors — OFIR",
   description: "Tu board privado de mentores extraordinarios",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Mentors OFIR",
+  },
+  formatDetection: { telephone: false },
 };
 
 export default function RootLayout({
