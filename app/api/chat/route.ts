@@ -1,12 +1,14 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { MENTORS, buildSystemPrompt } from "@/lib/mentors";
-import { loadMemory, addConversation, updateSummary, getRecentMessages } from "@/lib/memory";
+import { loadMemory, addConversation, updateSummary, getRecentMessages, Message } from "@/lib/memory";
 
 export const maxDuration = 60;
 
 function getClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY missing");
+  return new GoogleGenerativeAI(key);
 }
 
 export async function POST(req: NextRequest) {
@@ -24,12 +26,22 @@ export async function POST(req: NextRequest) {
     const recentHistory = await getRecentMessages(mentorId, 10);
     const allMessages = [...recentHistory, ...sessionMessages];
 
-    const deduped = allMessages.filter((msg: { role: string }, i: number) => {
+    const deduped = allMessages.filter((msg: Message, i: number) => {
       if (i === 0) return true;
       return msg.role !== allMessages[i - 1].role;
     });
 
-    const client = getClient();
+    const geminiMessages = deduped.map((m: Message) => ({
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: m.content }],
+    }));
+
+    const genAI = getClient();
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      systemInstruction: systemPrompt,
+    });
+
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({
@@ -37,22 +49,14 @@ export async function POST(req: NextRequest) {
         let fullResponse = "";
 
         try {
-          const anthropicStream = await client.messages.stream({
-            model: "claude-sonnet-4-6",
-            max_tokens: 1024,
-            system: systemPrompt,
-            messages: deduped,
+          const result = await model.generateContentStream({
+            contents: geminiMessages,
           });
 
-          for await (const chunk of anthropicStream) {
-            if (
-              chunk.type === "content_block_delta" &&
-              chunk.delta.type === "text_delta"
-            ) {
-              const text = chunk.delta.text;
-              fullResponse += text;
-              controller.enqueue(encoder.encode(text));
-            }
+          for await (const chunk of result.stream) {
+            const text = chunk.text();
+            fullResponse += text;
+            controller.enqueue(encoder.encode(text));
           }
 
           const conversationToSave = [
@@ -62,7 +66,7 @@ export async function POST(req: NextRequest) {
           const updatedMemory = await addConversation(mentorId, conversationToSave);
 
           if (updatedMemory.conversationCount % 5 === 0) {
-            generateSummary(mentorId, mentor.name, client);
+            generateSummary(mentorId, mentor.name, genAI);
           }
 
           controller.close();
@@ -85,7 +89,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function generateSummary(mentorId: string, mentorName: string, client: Anthropic) {
+async function generateSummary(mentorId: string, mentorName: string, genAI: GoogleGenerativeAI) {
   const memory = await loadMemory(mentorId);
   if (memory.conversations.length === 0) return;
 
@@ -96,17 +100,11 @@ async function generateSummary(mentorId: string, mentorName: string, client: Ant
     .join("\n");
 
   try {
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 512,
-      messages: [
-        {
-          role: "user",
-          content: `Resumí en 200 palabras qué aprendiste sobre Alan Naem a partir de estas conversaciones. Enfocate en: sus preocupaciones principales, decisiones que tomó, temas recurrentes, contexto personal relevante.\n\nConversaciones:\n${allText}`,
-        },
-      ],
-    });
-    const summary = response.content[0].type === "text" ? response.content[0].text : "";
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const response = await model.generateContent(
+      `Resumí en 200 palabras qué aprendiste sobre Alan Naem a partir de estas conversaciones. Enfocate en: sus preocupaciones principales, decisiones que tomó, temas recurrentes, contexto personal relevante.\n\nConversaciones:\n${allText}`
+    );
+    const summary = response.response.text();
     await updateSummary(mentorId, summary);
   } catch {
     // non-critical
