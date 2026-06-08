@@ -47,11 +47,10 @@ export async function POST(req: NextRequest) {
 
         try {
           const result = await ai.models.generateContentStream({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: geminiMessages,
             config: {
               systemInstruction: systemPrompt,
-              thinkingConfig: { thinkingBudget: 0 },
               maxOutputTokens: 800,
             },
           });
@@ -106,9 +105,9 @@ async function generateSummary(mentorId: string, mentorName: string, ai: GoogleG
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       contents: `Resumí en 200 palabras qué aprendiste sobre Alan Naem a partir de estas conversaciones. Enfocate en: sus preocupaciones principales, decisiones que tomó, temas recurrentes, contexto personal relevante.\n\nConversaciones:\n${allText}`,
-      config: { thinkingConfig: { thinkingBudget: 0 } },
+      config: {},
     });
     const summary = response.text ?? "";
     await updateSummary(mentorId, summary);
