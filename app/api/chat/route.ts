@@ -1,14 +1,14 @@
 import { NextRequest } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { MENTORS, buildSystemPrompt } from "@/lib/mentors";
 import { loadMemory, addConversation, updateSummary, Message } from "@/lib/memory";
 
 export const maxDuration = 60;
 
 function getClient() {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error("GEMINI_API_KEY missing");
-  return new GoogleGenerativeAI(key);
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+  return new GoogleGenAI({ apiKey });
 }
 
 export async function POST(req: NextRequest) {
@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
     const memory = await loadMemory(mentorId);
     const systemPrompt = buildSystemPrompt(mentor, memory.summary || undefined);
 
-    // Extract recent history from already-loaded memory (no second DB call)
     const recentHistory = memory.conversations.length > 0
       ? memory.conversations.slice(-3).flatMap(c => c.messages).slice(-10)
       : [];
@@ -39,13 +38,7 @@ export async function POST(req: NextRequest) {
       parts: [{ text: m.content }],
     }));
 
-    const genAI = getClient();
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: systemPrompt,
-      generationConfig: { maxOutputTokens: 800 },
-    });
-
+    const ai = getClient();
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({
@@ -53,14 +46,22 @@ export async function POST(req: NextRequest) {
         let fullResponse = "";
 
         try {
-          const result = await model.generateContentStream({
+          const result = await ai.models.generateContentStream({
+            model: "gemini-2.5-flash",
             contents: geminiMessages,
+            config: {
+              systemInstruction: systemPrompt,
+              thinkingConfig: { thinkingBudget: 0 },
+              maxOutputTokens: 800,
+            },
           });
 
-          for await (const chunk of result.stream) {
-            const text = chunk.text();
-            fullResponse += text;
-            controller.enqueue(encoder.encode(text));
+          for await (const chunk of result) {
+            const text = chunk.text ?? "";
+            if (text) {
+              fullResponse += text;
+              controller.enqueue(encoder.encode(text));
+            }
           }
 
           const conversationToSave = [
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
           const updatedMemory = await addConversation(mentorId, conversationToSave);
 
           if (updatedMemory.conversationCount % 5 === 0) {
-            generateSummary(mentorId, mentor.name, genAI);
+            generateSummary(mentorId, mentor.name, ai);
           }
 
           controller.close();
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function generateSummary(mentorId: string, mentorName: string, genAI: GoogleGenerativeAI) {
+async function generateSummary(mentorId: string, mentorName: string, ai: GoogleGenAI) {
   const memory = await loadMemory(mentorId);
   if (memory.conversations.length === 0) return;
 
@@ -104,11 +105,12 @@ async function generateSummary(mentorId: string, mentorName: string, genAI: Goog
     .join("\n");
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const response = await model.generateContent(
-      `Resumí en 200 palabras qué aprendiste sobre Alan Naem a partir de estas conversaciones. Enfocate en: sus preocupaciones principales, decisiones que tomó, temas recurrentes, contexto personal relevante.\n\nConversaciones:\n${allText}`
-    );
-    const summary = response.response.text();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Resumí en 200 palabras qué aprendiste sobre Alan Naem a partir de estas conversaciones. Enfocate en: sus preocupaciones principales, decisiones que tomó, temas recurrentes, contexto personal relevante.\n\nConversaciones:\n${allText}`,
+      config: { thinkingConfig: { thinkingBudget: 0 } },
+    });
+    const summary = response.text ?? "";
     await updateSummary(mentorId, summary);
   } catch {
     // non-critical
